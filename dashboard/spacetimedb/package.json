@@ -1,0 +1,12 @@
+{
+  "name": "roadsense-spacetime-module",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "dependencies": {
+    "spacetimedb": "^2.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.2"
+  }
+}

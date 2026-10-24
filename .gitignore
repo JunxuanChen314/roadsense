@@ -1,0 +1,23 @@
+.DS_Store
+
+# Secrets
+**/.env
+**/.env.local
+
+# Dependencies and caches
+**/node_modules/
+**/.npm-cache/
+**/.pio/
+**/.cache/
+**/compile_commands.json
+
+# Generated builds and local runtime state
+**/dist/
+**/.spacetime-data/
+dashboard/.spacetime/spacetime
+dashboard/data/road-events.csv
+dashboard/data/road-events.json
+
+# Local screenshots, reports, and report-generation files
+outputs/
+work/

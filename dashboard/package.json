@@ -1,0 +1,24 @@
+{
+  "name": "roadsense-spacetimedb",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 8080",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "doctor": "node scripts/doctor.mjs",
+    "export:data": "node scripts/export-data.mjs",
+    "export:watch": "node scripts/export-data.mjs --watch",
+    "stdb:start": "spacetime start",
+    "stdb:publish": "spacetime publish --server http://127.0.0.1:3000 --module-path spacetimedb --anonymous --yes roadsense-v3",
+    "stdb:generate": "spacetime generate --lang typescript --out-dir src/module_bindings --module-path spacetimedb"
+  },
+  "dependencies": {
+    "spacetimedb": "^2.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.2",
+    "vite": "^7.1.5"
+  }
+}

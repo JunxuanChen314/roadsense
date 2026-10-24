@@ -1,0 +1,7 @@
+.env
+.env.local
+.npm-cache/
+.spacetime-data/
+dist/
+node_modules/
+spacetimedb/node_modules

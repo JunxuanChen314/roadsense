@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RoadSense Road Monitoring</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">R</div>
+        <div><strong>RoadSense</strong><span>Road Monitoring & Early Warning System</span></div>
+      </div>
+      <div class="actions">
+        <span id="connectionBadge" class="badge neutral"><i></i>Device disconnected</span>
+        <button id="connectButton" class="button primary">Connect ESP32</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero-row">
+        <div>
+          <p class="eyebrow">LIVE ROAD CONDITION</p>
+          <h1>Live Road Conditions</h1>
+          <p id="lastUpdate" class="muted">Waiting for device data</p>
+        </div>
+        <div class="hero-controls">
+          <div class="mode-switch" aria-label="Mode switch">
+            <button id="detectionTab" class="active">Detection</button>
+            <button id="warningTab">Warning</button>
+          </div>
+          <button id="routeButton" class="button route-button">Start Detection</button>
+        </div>
+      </section>
+
+      <section class="metrics">
+        <article class="metric-card">
+          <span>Device Status</span><strong id="deviceState">Disconnected</strong>
+          <small id="gpsState">GPS —</small>
+        </article>
+        <article class="metric-card">
+          <span>Current Impact</span><strong><b id="impactValue">0.00</b> <em>m/s²</em></strong>
+          <small>Filtered vertical movement</small>
+        </article>
+        <article class="metric-card">
+          <span>Forward Distance</span><strong><b id="distanceValue">—</b> <em>mm</em></strong>
+          <small id="distanceState">Waiting for distance</small>
+        </article>
+        <article class="metric-card accent">
+          <span id="eventMetricLabel">Saved Hazards</span><strong id="eventCount">0</strong>
+          <small id="eventMetricHint">Impacts are recorded during detection</small>
+        </article>
+      </section>
+
+      <section class="content-grid">
+        <div class="map-stack">
+          <article class="panel map-panel">
+            <div class="panel-title">
+              <div><h2>Route & Events</h2><p>VL53L0X centimeter-scale route · GPS reference</p></div>
+              <span id="coordinateText">--, --</span>
+            </div>
+            <div id="map" class="map">
+              <div class="road road-a"></div><div class="road road-b"></div><div class="road road-c"></div>
+              <svg id="routeSvg" viewBox="0 0 1000 520" preserveAspectRatio="none" aria-hidden="true">
+                <polyline id="routeLine" points="" />
+              </svg>
+              <div id="vehicle" class="vehicle" title="Current position">▲</div>
+              <div id="mapHint" class="map-hint">Place the vehicle at the start, then begin detection</div>
+              <div id="distanceScale" class="distance-scale"></div>
+            </div>
+            <div class="legend"><span><i class="dot blue"></i>Current position</span><span><i class="dot orange"></i>Normal event</span></div>
+          </article>
+
+          <article class="panel ai-panel">
+            <div class="panel-title ai-heading">
+              <div><h2>AI Risk Analysis</h2><p>Claude · Route-level assessment</p></div>
+              <span id="aiBadge" class="mini-badge">Waiting for route</span>
+            </div>
+            <div class="ai-layout">
+              <div class="ai-copy">
+                <div class="ai-copy-block"><span>Assessment</span><p id="aiSummary" class="ai-summary">Complete a route to classify its overall road risk.</p></div>
+                <div class="ai-copy-block"><span>Repeat-pass prediction</span><p id="aiPrediction" class="ai-summary">Prediction will appear after route analysis.</p></div>
+              </div>
+              <div class="ai-actions">
+                <div class="ai-facts">
+                  <span>Route Grade <b id="aiRisk">—</b></span>
+                  <span>Confidence <b id="aiConfidence">—</b></span>
+                </div>
+                <button id="analyzeButton" class="button ai-button" disabled>Analyze This Route</button>
+                <small class="integration-note"><i></i><span id="syncState">Connecting to SpacetimeDB…</span></small>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <aside class="side-stack">
+          <article id="statusPanel" class="panel status-panel">
+            <div class="status-icon">✓</div>
+            <div><span>Road Status</span><h2 id="roadStatus">Normal</h2><p id="roadMessage">Continuously monitoring the road</p></div>
+          </article>
+          <article class="panel">
+            <div class="panel-title"><div><h2>Sensors</h2><p>Live health status</p></div></div>
+            <div class="sensor-list">
+              <div><span>MPU6050</span><b id="mpuHealth">Waiting</b></div>
+              <div><span>VL53L0X</span><b id="vl53Health">Waiting</b></div>
+              <div><span>GPS</span><b id="gpsHealth">Waiting</b></div>
+              <div><span>Vibration Motor</span><b id="motorHealth">Ready</b></div>
+            </div>
+          </article>
+          <article class="panel raw-panel">
+            <div class="panel-title"><div><h2>Raw Sensors</h2><p>Live diagnostics</p></div></div>
+            <div class="raw-grid">
+              <span>MPU X <b id="rawAx">0.00</b></span>
+              <span>MPU Y <b id="rawAy">0.00</b></span>
+              <span>MPU Z <b id="rawAz">0.00</b></span>
+              <span>VL53 <b id="rawDistance">—</b></span>
+              <span>Satellites <b id="rawSats">0</b></span>
+              <span>HDOP <b id="rawHdop">—</b></span>
+            </div>
+          </article>
+        </aside>
+      </section>
+
+      <section class="lower-grid">
+        <article class="panel chart-panel">
+          <div class="panel-title"><div><h2>Impact Trend</h2><p>Last 30 seconds</p></div><strong id="peakValue">Peak 0.00</strong></div>
+          <canvas id="impactChart"></canvas>
+        </article>
+        <article class="panel events-panel">
+          <div class="panel-title"><div><h2>Hazard Records</h2><p id="eventPanelHint">Road anomalies are saved automatically during detection</p></div><button id="clearEvents">Clear Local Records</button></div>
+          <div id="eventList" class="event-list"><div class="empty">No events detected</div></div>
+        </article>
+      </section>
+
+      <section class="panel history-panel">
+        <div class="panel-title"><div><h2>Route History</h2><p>Each detection run is saved separately and can be viewed or deleted</p></div></div>
+        <div id="routeHistory" class="route-history"><div class="empty">No route history</div></div>
+      </section>
+
+      <section class="panel database-panel">
+        <div class="panel-title database-heading">
+          <div><h2>SpacetimeDB Backend Data</h2><p>road_event table · Live subscription</p></div>
+          <div class="database-actions">
+            <span id="databaseBadge" class="database-badge">Connecting</span>
+            <a class="data-download" href="/data/road-events.csv" download>Download CSV</a>
+            <a class="data-download" href="/data/road-events.json" download>Download JSON</a>
+          </div>
+        </div>
+        <div class="database-stats">
+          <span>Backend Records <b id="databaseTotal">0</b></span>
+          <span>High Risk <b id="databaseHighRisk">0</b></span>
+          <span>Last Synced <b id="databaseUpdatedAt">—</b></span>
+        </div>
+        <div class="database-table-wrap">
+          <table class="database-table">
+            <thead><tr><th>Time</th><th>Device</th><th>Impact</th><th>Distance</th><th>GPS</th><th>Risk</th></tr></thead>
+            <tbody id="databaseRows"><tr><td colspan="6" class="database-empty">Waiting for SpacetimeDB data</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <div id="toast" class="toast"></div>
+    <script type="module" src="/src/spacetime-client.ts"></script>
+    <script type="module" src="/src/roadsense/main.js"></script>
+  </body>
+</html>
